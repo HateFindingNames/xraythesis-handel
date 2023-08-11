@@ -9,87 +9,98 @@ and the default structure. However, you can also skip scons and integrate with
 your own build system with any library structure you like.
 
 
-Makefile reference
-==================
+# Makefile reference
 
 For a non-scons reference, here is a sample Makefile from a Handel user that
 sets flags and source lists for a previous version of Handel:
 https://subversion.xray.aps.anl.gov/synApps/dxp/trunk/dxpApp/handelSrc/Makefile
 
 
-scons dev setup
-===============
+# scons dev setup
 
 The latest version of SCons and swtoolkit are only compatible with python3
 
-# Python
+## Python
+```shell
 sudo apt-get install python
+```
 
-# Other packages
+## Other packages
+```shell
 pip install -r requirements.txt
+```
 
-# Handel dev dependencies
-export TMP=/tmp # Handel's scons script reads this var?
+## Handel dev dependencies
+``export TMP=/tmp # Handel's scons script reads this var?``
 
-# optional: Handel's test suite requires Ruby
+## optional: Handel's test suite requires Ruby
+
+```shell
 sudo apt-get install ruby ruby-dev
+```
+then
+```shell
 sudo gem install ffi
+```
 
-
-Building with scons
-===================
+## Building with scons
 
 Handel has many flags that map to defines in the compilation environment. A
 little experimentation may be needed to get the set that supports only the
 products you need.
 
 Here's an example for microDXP USB2:
-
-   hammer --udxp --no-udxps --no-xw --no-serial --no-xmap --no-stj --no-mercury --no-saturn --verbose
+```shell
+hammer --udxp --no-udxps --no-xw --no-serial --no-xmap --no-stj --no-mercury --no-saturn --verbose
+```
 
 To search for other flags, search "SetBitFromOption" in main.scons.
 
 
-Defines
-=======
+# Defines
 
 This section lists defines you can use in your build system to control
 the features compiled in Handel. Note that not every define is needed
 for every file in the source distribution.
 
 Disable products and protocols not currently supported on Linux:
-
-    EXCLUDE_XMAP EXCLUDE_STJ EXCLUDE_PLX
+```
+EXCLUDE_XMAP EXCLUDE_STJ EXCLUDE_PLX
+```
 
 Selectively disable products you do not use:
-
-    EXCLUDE_MERCURY EXCLUDE_SATURN EXCLUDE_UDXP
+```
+EXCLUDE_MERCURY EXCLUDE_SATURN EXCLUDE_UDXP
+```
 
 When building for microDXP, always define these internal feature
 exclusions, which are not available in the customer release:
-
-    EXCLUDE_UDXPS EXCLUDE_XUP
+```
+EXCLUDE_UDXPS EXCLUDE_XUP
+```
 
 Selectively disable interface protocols you do not use:
+```
+EXCLUDE_SERIAL EXCLUDE_EPP EXCLUDE_USB EXCLUDE_USB2
+```
 
-    EXCLUDE_SERIAL EXCLUDE_EPP EXCLUDE_USB EXCLUDE_USB2
 
-
-USB Setup
-=========
+# USB Setup
 
 Handel USB and USB2 support on Linux are built on libusb-0.1.
-
-  sudo apt-get install libusb-dev
+```shell
+sudo apt-get install libusb-dev
+```
 
 Check that libusb sees the XIA device:
-
+```shell
   lsusb -v | grep "ID: 10e9"
+```
 
 By default, root is required to open the device. This snippet shows
 how to set up Ubuntu udev rules to enable user access:
 
-```
+```shell
 # Confirm your user is in the plugdev group
 groups
 
@@ -103,16 +114,14 @@ RULES
 It may be helpful in debugging to monitor USB transfers. This is easy
 if your system includes usbmon:
 
-```
+```shell
 mount -t debugfs none_debugs /sys/kernel/debug
 modprobe usbmon
-
 cat /sys/kernel/debug/usb/usbmon/1u | sed -n -e "s/^[a-f0-9]\+ [0-9]\+//p"
 ```
 
 
-Serial Port Setup
-=================
+# Serial Port Setup
 
 Handel v1.2.19 and later includes a serial port implementation built
 on termios. This interface is experimental but does pass all microDXP
