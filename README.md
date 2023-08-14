@@ -7,6 +7,7 @@
     - [1.3.3. Notes](#133-notes)
   - [1.4. Defines](#14-defines)
   - [1.5. USB Setup](#15-usb-setup)
+    - [1.5.1. Troubleshooting](#151-troubleshooting)
   - [1.6. Serial Port Setup](#16-serial-port-setup)
 - [2. Windows](#2-windows)
   - [2.1. Building with scons](#21-building-with-scons)
@@ -158,7 +159,12 @@ sudo apt-get install libusb-dev
 
 Check that libusb sees the XIA device:
 ```shell
-lsusb -v | grep "ID 10e9"
+lsusb | grep "ID 10e9"
+```
+
+The output should be looking something like
+```shell
+Bus 001 Device 003: ID 10e9:0b01 Cypress EZ-USB
 ```
 
 By default, root is required to open the device. This snippet shows
@@ -168,22 +174,31 @@ how to set up Ubuntu udev rules to enable user access:
 # Confirm your user is in the plugdev group
 groups
 
-# Set up udev rules. Customize idProduct for your device.
-sudo cat > /etc/udev/rules.d/99-xia-usb.rules <<RULES
-ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="10e9", ATTRS{idProduct}=="0702", MODE="660", GROUP="plugdev"
-ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="10e9", ATTRS{idProduct}=="0b01", MODE="660", GROUP="plugdev"
-RULES
+# Set up udev rules. Customize idProduct for your device as given in second hex pair after 10e9.
+sudo echo "ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="10e9", ATTRS{idProduct}=="0b01", MODE="0660", GROUP="plugdev"" | tee /etc/udev/rules.d/99-xia.rules
+
+# Reload udev-rules
+sudo /etc/init.d/udev restart
 ```
+
+
+### 1.5.1. Troubleshooting
+
+If setting udev-rules does not work as expacted, one can try debugging using following procedure:
+
+1. Get `<bus_num>`, `<device_num>` and `<device_id>` from `lsusb | grep "ID 10e9"`.
+2. Execute `udevadm info -a -n /dev/bus/usb/<bus_num>/<device_num>` where `<bus_num>` and `<device_num>` are optained from the previous step.
+3. Look at the device with `ATTR{idVendor}=="10e9"` and `ATTR{idProduct}=="<device_id>"` (should be the first device). The string after *looking at device* is the `<device_path>`
+4. Check `sudo udevadm test <device_path>` for any errors.
 
 It may be helpful in debugging to monitor USB transfers. This is easy
 if your system includes usbmon:
 
 ```shell
-mount -t debugfs none_debugs /sys/kernel/debug
-modprobe usbmon
-cat /sys/kernel/debug/usb/usbmon/1u | sed -n -e "s/^[a-f0-9]\+ [0-9]\+//p"
+sudo mount -t debugfs none_debugs /sys/kernel/debug
+sudo modprobe usbmon
+sudo cat /sys/kernel/debug/usb/usbmon/1u | sed -n -e "s/^[a-f0-9]\+ [0-9]\+//p" 2>&1 | tee /tmp/xmagix_usbmon.log
 ```
-
 
 ## 1.6. Serial Port Setup
 
