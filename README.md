@@ -51,6 +51,8 @@ sudo apt install libusb-dev
 
 ### 1.3.1. optional: Handel's test suite requires Ruby
 
+Apparently, the *test suit* is not part of this repository making this step extra optional.
+
 ```shell
 sudo apt-get install ruby ruby-dev
 ```
@@ -72,7 +74,34 @@ Here's an example for microDXP USB2:
 TMP=/tmp sh swtoolkit/hammer.sh --udxp --no-udxps --no-xw --no-serial --no-xmap --no-stj --no-mercury --no-saturn --verbose
 ```
 
-To search for other flags, search "SetBitFromOption" in main.scons.
+All flags. Taken from ``SetBitFromOption`` in ``./main.scons``.
+
+| Flag       | Description                                  | Default |
+| ---------- | -------------------------------------------- | ------- |
+| Protocols  |                                              |         |
+| `epp`      | Include EPP driver                           | `False` |
+| `serial`   | Include RS-232 driver                        | `True`  |
+| `usb`      | Include USB driver                           | `False` |
+| `usb2`     | Include USB2 driver                          | `True`  |
+| `plx`      | Include PLX driver                           | `True`  |
+| Devices    |                                              |         |
+| `saturn`   | Include Saturn support                       | `True`  |
+| `udxp`     | Include microDXP support                     | `True`  |
+| `udxps`    | Include microDXP setup support               | `False` |
+| `xmap`     | Include xMAP support                         | `True`  |
+| `stj`      | Include Stj support                          | `True`  |
+| `mercury`  | Include Mercury/Mercury-4 support            | `True`  |
+| General    |                                              |         |
+| `release`  | Release build                                | `False` |
+| `analysis` | Build with code analysis                     | `False` |
+| `alpha`    | Build Handel with support for the alpha udxp | `False` |
+| `vba`      | Build stdcall dlls for VB applications       | `False` |
+| `xw`       | Build xw library                             | `True`  |
+| `x64`      | Build Handel for x64 platform                | `False` |
+| `tests`    | Build and run tests                          | `False` |
+| `samples`  | Build samples                                | `False` |
+| `vld`      | Build with Visual Leak Detector              | `False` |
+
 
 Change options in ``build.sh`` and execute:
 
@@ -87,7 +116,7 @@ chmod +x ./build.sh
 ### 1.3.3. Notes
 
 Chain of script calls:
-``build.sh`` --> ``hammer.sh`` --> ``wrapper.py`` --> ?? --> output to ./scons-out
+``build.sh`` --> ``./swtoolkit/hammer.sh`` --> ``./swtoolkit/wrapper.py`` --> ?? --> output to ./scons-out
 
 Handel dev dependencies:
 ``export TMP=/tmp # Handel's scons script reads this var?``
@@ -129,7 +158,7 @@ sudo apt-get install libusb-dev
 
 Check that libusb sees the XIA device:
 ```shell
-  lsusb -v | grep "ID: 10e9"
+lsusb -v | grep "ID 10e9"
 ```
 
 By default, root is required to open the device. This snippet shows
