@@ -41,7 +41,7 @@ A working conda install. Then:
 
 ```shell
 # Create conda environment
-conda create -n xmagix python=3.9 pip
+conda create -n xmagix python=3.9 pip ipykernel
 
 # Install required python packages
 pip install -r requirements.txt
