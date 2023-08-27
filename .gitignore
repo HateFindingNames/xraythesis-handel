@@ -1,3 +1,6 @@
 xmagix
 /scons-out
 /build.log
+*__pycache__
+myapp/lib
+myapp/handel.log
