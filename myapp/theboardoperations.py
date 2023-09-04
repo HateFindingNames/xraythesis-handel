@@ -26,7 +26,7 @@ board_operations_all = [
         # • XIA_PRESET_FIXED_TRIGGERS
         # • XIA_PRESET_FIXED_EVENTS
         # The values are defined as time in seconds, for the time based runs and counts for the other types.
-        # The acquisition values preset_type and preset_value have been implemented to provide r/w access to preset run properties, and should be usedinstead.
+        # The acquisition values <preset_type> and <preset_value> have been implemented to provide r/w access to preset run properties, and should be used instead.
     "get_board_info",
         # (unsigned char[26]) Returns the array of board information listed in command 0x49 of the RS-232 Command Reference. The returned data is stored in the array as follows, each line representing a byte. Although the pre-allocated size is fixed, the returned content is dependent on the number of FiPPIs. For products with a single FiPPI,unused bytes can be ignored.
         # -----------------------------
