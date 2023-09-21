@@ -175,7 +175,7 @@ how to set up Ubuntu udev rules to enable user access:
 groups
 
 # Set up udev rules. Customize idProduct for your device as given in second hex pair after 10e9.
-sudo echo "ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="10e9", ATTRS{idProduct}=="0b01", MODE="0660", GROUP="plugdev"" | tee /etc/udev/rules.d/99-xia.rules
+sudo echo 'ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="10e9", ATTRS{idProduct}=="0b01", MODE="0660", GROUP="plugdev"' | sudo tee /etc/udev/rules.d/99-xia.rules
 
 # Reload udev-rules
 sudo /etc/init.d/udev restart
