@@ -106,15 +106,15 @@ class Tube:
         self.hv = hv
         if 4 <= hv <= 70:
             val = abs(int(hv*4095/70))
+            print(val)
             self.HVval = self.composeBytesDac(val, 0)
             print(f"HV set to {hv} -> {val}. Ok.")
-            pass
         elif 0 <= hv < 4:
             print(f"HV set to 0. Ok.")
+            self.HVval = self.composeBytesDac(0, 0)
         else:
             print("HV must be in range 4-70kV!")
-        self.HVval = self.composeBytesDac(0, 0)
-        pass
+            self.HVval = self.composeBytesDac(0, 0)
 
         # self.pi.spi_write(self.dac, val)
     
