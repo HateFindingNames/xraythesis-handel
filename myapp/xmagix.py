@@ -343,16 +343,18 @@ class XMagix:
         self.CHECK_ERROR("Starting Run...")
 
         console.clear()
-        with console.status(":satellite:  Events: 0, cps: 0") as status:
-            for _ in range(int(realtime)):
+        with console.status(":satellite: out cps: 0, Events: 0") as status:
+            for _ in range(10*int(realtime)):
                 self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("output_count_rate"), byref(coutputCountRate))
+                # self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("input_count_rate"), byref(cinputCountRate))
                 self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("events_in_run"), byref(ceventsInRun))
                 self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("run_active"), byref(crunActive))
                 self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("runtime"), byref(cruntime))
-                status.update(f":satellite: Time: {cruntime.value:.1f}/{realtime:.1f}, in cps: {cinputCountRate.value}, out cps: {coutputCountRate.value}")
+                status.update(f":satellite: Time: {cruntime.value:.1f}/{realtime:.1f}, out cps: {coutputCountRate.value:.2f}, Events: {ceventsInRun.value}")
                 if crunActive.value == 0:
                     break
-                time.sleep(1)
+                time.sleep(.1)
+        console.log(f"Done. Run statistics: out cps: {coutputCountRate.value:.2f}, Events: {ceventsInRun.value}")
         
     def stopRun(self, stopmessage="Stopped..."):
         """Stops an active run."""
