@@ -1,42 +1,41 @@
 - [1. Linux](#1-linux)
   - [1.1. Makefile reference](#11-makefile-reference)
-  - [1.2. Scons dev setup](#12-scons-dev-setup)
+  - [1.2. SCons dev setup](#12-scons-dev-setup)
   - [1.3. Requirements](#13-requirements)
-    - [1.3.1. optional: Handel's test suite requires Ruby](#131-optional-handels-test-suite-requires-ruby)
-    - [1.3.2. Building with scons](#132-building-with-scons)
+    - [1.3.1. Optional: Handel's test suite requires Ruby](#131-optional-handels-test-suite-requires-ruby)
+    - [1.3.2. Building with SCons](#132-building-with-scons)
     - [1.3.3. Notes](#133-notes)
   - [1.4. Defines](#14-defines)
   - [1.5. USB Setup](#15-usb-setup)
     - [1.5.1. Troubleshooting](#151-troubleshooting)
   - [1.6. Serial Port Setup](#16-serial-port-setup)
 - [2. Windows](#2-windows)
-  - [2.1. Building with scons](#21-building-with-scons)
+  - [2.1. Building with SCons](#21-building-with-scons)
 
 # 1. Linux
 
-XIA builds Handel with scons (stock) + swtoolkit (slightly modified).
+XIA builds Handel with SCons (stock) + swtoolkit (slightly modified).
 
-The scons build makes heavy use of static libraries and produces one shared
+The SCons build makes heavy use of static libraries and produces one shared
 library for the Handel API and a shared library for each driver protocol (e.g.
 xia_usb2 and xia_plx).
 
 This document lists the steps to get Handel building on Linux with those tools
-and the default structure. However, you can also skip scons and integrate with
+and the default structure. However, you can also skip SCons and integrate with
 your own build system with any library structure you like.
-
 
 ## 1.1. Makefile reference
 
-For a non-scons reference, here is a sample Makefile from a Handel user that
+For a non-SCons reference, here is a sample Makefile from a Handel user that
 sets flags and source lists for a previous version of Handel:
 https://subversion.xray.aps.anl.gov/synApps/dxp/trunk/dxpApp/handelSrc/Makefile
 
-
-## 1.2. Scons dev setup
+## 1.2. SCons dev setup
 
 The latest version of SCons and swtoolkit are only compatible with python3
 
 ## 1.3. Requirements
+
 A working 64bit conda install. Running on the Raspberry Pi 4 using an e.g. [https://github.com/conda-forge/miniforge](https://github.com/conda-forge/miniforge). Then:
 
 ```shell
@@ -54,7 +53,7 @@ sudo pigpiod
 sudo apt install libusb-dev
 ```
 
-### 1.3.1. optional: Handel's test suite requires Ruby
+### 1.3.1. Optional: Handel's test suite requires Ruby
 
 Apparently, the *test suit* is not part of this repository making this step extra optional.
 
@@ -66,7 +65,7 @@ then
 sudo gem install ffi
 ```
 
-### 1.3.2. Building with scons
+### 1.3.2. Building with SCons
 
 A build log is output into ``./build.log``
 
@@ -107,7 +106,6 @@ All flags. Taken from ``SetBitFromOption`` in ``./main.scons``.
 | `samples`  | Build samples                                | `False` |
 | `vld`      | Build with Visual Leak Detector              | `False` |
 
-
 Change options in ``build.sh`` and execute:
 
 ```shell
@@ -121,7 +119,7 @@ chmod +x ./build.sh
 ### 1.3.3. Notes
 
 Chain of script calls:
-``build.sh`` --> ``./swtoolkit/hammer.sh`` --> ``./swtoolkit/wrapper.py`` --> ?? --> output to ./scons-out
+``build.sh`` → ``./swtoolkit/hammer.sh`` → ``./swtoolkit/wrapper.py`` → ?? → output to ``./scons-out``
 
 Handel dev dependencies:
 ``export TMP=/tmp # Handel's scons script reads this var?``
@@ -188,10 +186,10 @@ sudo /etc/init.d/udev restart
 
 ### 1.5.1. Troubleshooting
 
-If setting udev-rules does not work as expacted, one can try debugging using following procedure:
+If setting udev-rules does not work as expected, one can try debugging using following procedure:
 
 1. Get `<bus_num>`, `<device_num>` and `<device_id>` from `lsusb | grep "ID 10e9"`.
-2. Execute `udevadm info -a -n /dev/bus/usb/<bus_num>/<device_num>` where `<bus_num>` and `<device_num>` are optained from the previous step.
+2. Execute `udevadm info -a -n /dev/bus/usb/<bus_num>/<device_num>` where `<bus_num>` and `<device_num>` are obtained from the previous step.
 3. Look at the device with `ATTR{idVendor}=="10e9"` and `ATTR{idProduct}=="<device_id>"` (should be the first device). The string after *looking at device* is the `<device_path>`
 4. Check `sudo udevadm test <device_path>` for any errors.
 
@@ -214,7 +212,7 @@ com_port as you would for the Windows serial interface, locate the
 device in /dev and put this file in the device\_file setting. Here is
 a full sample module definition:
 
-```
+```ini
 [module definitions]
 START #0
 alias = module1
@@ -233,8 +231,8 @@ END #0
 
 # 2. Windows
 
-Handel is built with SCons+swtoolkit. The latest version of Scons
-and swtoolkit are updated to be compatile with python3
+Handel is built with SCons+swtoolkit. The latest version of SCons
+and swtoolkit are updated to be compatible with python3
 
 1. Install the latest Python3 Windows installer from [python.org] or
    using Chocolately. The x86-64 version is fine on a 64-bit system.
@@ -246,27 +244,25 @@ versions of Ruby in order to test both builds of Handel. For each
 version, `gem install ffi`.
 
 
-## 2.1. Building with scons
+## 2.1. Building with SCons
 
 Handel has many flags that map to defines in the compilation environment. A
 little experimentation may be needed to get the set that supports only the
 products you need.
 
-The incldued bulid script can be used to invoke SCons build environment.
+The included build script can be used to invoke SCons build environment.
 
 Here's an example for microDXP USB2:
-```
+```bash
 build --udxp --no-udxps --no-xw --no-serial --no-xmap --no-stj --no-mercury --no-saturn --verbose
 ```
 
 Another example to build the examples with default option:
-```
+```bash
 build --samples
 ```
 
-To search for other flags, search "SetBitFromOption" in main.scons.
-
-
+To search for other flags, search ``SetBitFromOption`` in ``main.scons``.
 
 Resources:
 
