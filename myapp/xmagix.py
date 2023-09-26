@@ -2,9 +2,9 @@ from timeit import default_timer as timer
 import time
 from rich import print
 from rich.console import Console
-from rich.progress import track
+from rich.progress import track, Progress
 # import matplotlib.pyplot as plt
-# import numpy as np
+import numpy as np
 from ctypes import *
 from theapp_errors import *
 from theapp_constants import *
@@ -229,29 +229,36 @@ class XMagix:
                 
         return self.acquisitionValuesDict
     
-    def getBoardOperationValues(self, name) -> dict:
-        """Retrieves the current setting of an acquisition value. This routine returns the same value as xiaSetAcquisitionValues() in the value parameters."""
+    def getBoardInformation(self):
+        """Retrieves Board INformation."""
 
-        # cname = self.stringToBytes(name)
-        cvalue = c_double(0)
+        binfo = ["PIC Code Variant",
+                "PIC Code Major Version",
+                "PIC Code Minor Version",
+                "DSP Code Variant",
+                "DSP Code Major Version",
+                "DSP Code Minor Version",
+                "DSP Clock Speed",
+                "Clock Enable Register",
+                "Number of FiPPIs",
+                "Gain Mode",
+                "Gain (mantissa low byte)",
+                "Gain (mantissa high byte)",
+                "Gain (exponent)",
+                "Nyquist Filter",
+                "ADC Speed Grade",
+                "FPGA Speed",
+                "Analog Power Supply",
+                "FiPPI 0 Decimation",
+                "FiPPI 0 Version",
+                "FiPPI 0 Variant"]
+        
+        cchararray = (c_char * 26)(0)
 
-        self.boardOperationParams = []
-        self.boardOperationValues = []
-        if name == "all":
-            for key in board_operations:
-                self.status = self._lib.xiaBoardOperation(self.cdetChan, self.stringToBytes(key), byref(cvalue))
-                # console.log(f"{key}: {cvalue.value}")
-                # self.CHECK_ERROR
-                self.boardOperationParams.append(key)
-                self.boardOperationValues.append(cvalue.value)
-            self.boardOperationValuesDict = dict(zip(self.boardOperationParams, self.boardOperationValues))
-        else:
-            if name in board_operations_all:
-                console.log(f"{name}: {self.boardOperationValuesDict[name]}")
-            else:
-                console.log(f"[dark_orange] :warning: Board operation <name> unknown.")
-                
-        return self.boardOperationValuesDict
+        self._lib.xiaBoardOperation(self.cdetChan, self.stringToBytes("get_board_info"), byref(cchararray))
+        chararray = np.frombuffer(np.ctypeslib.as_array(cchararray), dtype=np.int8)
+        binfo = dict(zip(binfo, chararray.tolist()))
+        return binfo
 
     def setParams(self, params):
         """Setting parameters. Defaults taken from XIAs Programmer Guide"""
@@ -322,34 +329,32 @@ class XMagix:
         self.ctype = c_double(CONSTANTS["XIA_PRESET_FIXED_REAL"])
         clearMca = not clearMca
         self.cclearMca = c_short(clearMca) # 0: DO clear MCA, 1: do NOT clear MCA
-        self.crunActive = c_short(0)
-        # cpresetArray = (c_double*2)()
+        crunActive = c_short(0)
+        cinputCountRate = c_double(0)
+        coutputCountRate = c_double(0)
+        ceventsInRun = c_ulong(0)
+        cruntime = c_double(0)
         abort = 0
 
-        # cpresetArray[0] = self.ctype
-        # cpresetArray[1] = self.crealtime
-        # self.status = self._lib.xiaBoardOperation(self.cdetChan, self.stringToBytes("set_preset"), byref(cpresetArray))
         self.status = self.setAcquisitionValues("preset_type", CONSTANTS["XIA_PRESET_FIXED_REAL"])
         self.status = self.setAcquisitionValues("preset_value", realtime)
-        # self.CHECK_ERROR()
 
         self.status = self._lib.xiaStartRun(self.cdetChan, self.cclearMca)
         self.CHECK_ERROR("Starting Run...")
 
-        # while self.crunActive.value == 0 and abort < 20:
-        #     # console.status(f"Setting up fixed realtime run ({realtime} s)...")
-        #     self.status = self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("run_active"), byref(self.crunActive))
-        #     abort += 1
-        #     time.sleep(.2)
-
-        for i in track(range(int(realtime)), description="Detecting stuff :satellite: "):
-            self.status = self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("run_active"), byref(self.crunActive))
-            if self.crunActive.value == 0:
-                break
-            time.sleep(1)
-
-        # console.log("Run finished :D Quitting...")
-        # self.stopRun("Run finished :D Quitting...")
+        console.clear()
+        with console.status(":satellite: out cps: 0, Events: 0") as status:
+            for _ in range(10*int(realtime)):
+                self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("output_count_rate"), byref(coutputCountRate))
+                # self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("input_count_rate"), byref(cinputCountRate))
+                self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("events_in_run"), byref(ceventsInRun))
+                self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("run_active"), byref(crunActive))
+                self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("runtime"), byref(cruntime))
+                status.update(f":satellite: Time: {cruntime.value:.1f}/{realtime:.1f}, out cps: {coutputCountRate.value:.2f}, Events: {ceventsInRun.value}")
+                if crunActive.value == 0:
+                    break
+                time.sleep(.1)
+        console.log(f"Done. Run statistics: out cps: {coutputCountRate.value:.2f}, Events: {ceventsInRun.value}")
         
     def stopRun(self, stopmessage="Stopped..."):
         """Stops an active run."""
@@ -368,16 +373,16 @@ class XMagix:
         """Time to read out the MCA"""
         
         nmca = self.getAcquisitionValues(name="number_mca_channels")
-        mca = (c_ulong * int(nmca))()
+        cmca = (c_ulong * int(nmca))()
 
         # Prototype of xiaGetRunData:
         # PSL_STATIC int pslGetRunData(int detChan, char *name, void *value, XiaDefaults *defs, Module *m)
 
-        self.status = self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("mca"), byref(mca))
+        self.status = self._lib.xiaGetRunData(self.cdetChan, self.stringToBytes("mca"), byref(cmca))
         self.CHECK_ERROR("Pulling MCA...")
 
         # self.exit(exitmessage="Done. Exiting...")
-
+        mca = np.ctypeslib.as_array(cmca)
         return mca
 
         # console.log(type(mca))
