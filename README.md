@@ -37,7 +37,7 @@ https://subversion.xray.aps.anl.gov/synApps/dxp/trunk/dxpApp/handelSrc/Makefile
 The latest version of SCons and swtoolkit are only compatible with python3
 
 ## 1.3. Requirements
-A working conda install. Then:
+A working 64bit conda install. Running on the Raspberry Pi 4 using an e.g. [https://github.com/conda-forge/miniforge](https://github.com/conda-forge/miniforge). Then:
 
 ```shell
 # Create conda environment
@@ -45,6 +45,10 @@ conda create -n xmagix python=3.9 pip ipykernel
 
 # Install required python packages
 pip install -r requirements.txt
+
+# Install fast GPIO library and activate service
+sudo apt-get install pigpio python-pigpio python3-pigpio
+sudo pigpiod
 
 # Install other dependencies
 sudo apt install libusb-dev
