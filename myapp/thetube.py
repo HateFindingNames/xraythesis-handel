@@ -17,10 +17,6 @@ class Tube:
         self.pi.write(self.enpin, 0)
 
         self.dac = self.pi.spi_open(1, 20000000, 1) # device 0 at 20MHz using mode 1 (clk-polarity 0, clock-phase 1)
-        self.R1_msk = 0x8000 # bit 15
-        self.SPD_msk = 0x4000 # 1: fast mode; 0: slow mode
-        self.PWR_msk = 0x2000 # 1: power down; 0: normal operation
-        self.R0_msk = 0x1000 # bit 12
 
         # ADC SPI-Com config: T=1 (LSB first on MOSI) (3-wire mode) nnnn=0001 (write 1 bytes then read) W=1 (3-wire) mm=11 (POL1, PHA1)
         # --> 0x4403
@@ -41,9 +37,9 @@ class Tube:
     def enable(self):
         self.enabled = True
         self.pi.write(self.enpin, True)
-        self.pi.spi_write(self.dac, self.Ival)
-        sleep(.001)
-        self.pi.spi_write(self.dac, self.HVval)
+        # self.pi.spi_write(self.dac, self.Ival)
+        # sleep(.01)
+        # self.pi.spi_write(self.dac, self.HVval)
 
     def disable(self):
         self.enabled = False
@@ -108,7 +104,7 @@ class Tube:
             val = abs(int(hv*4095/70))
             print(val)
             self.HVval = self.composeBytesDac(val, 0)
-            print(f"HV set to {hv} -> {val}. Ok.")
+            print(f"HV set to {hv}kV -> {val}. Ok.")
         elif 0 <= hv < 4:
             print(f"HV set to 0. Ok.")
             self.HVval = self.composeBytesDac(0, 0)
@@ -116,7 +112,7 @@ class Tube:
             print("HV must be in range 4-70kV!")
             self.HVval = self.composeBytesDac(0, 0)
 
-        # self.pi.spi_write(self.dac, val)
+        self.pi.spi_write(self.dac, self.HVval)
     
     def setI(self, i: float) -> None:
         """Set Filament Current Output in uA. Output gets capped at 12 Watt."""
@@ -137,7 +133,7 @@ class Tube:
             self.Ival = self.composeBytesDac(0, 1)
             print(f"Filament current must be in range 0-{(12/self.hv):.3f}uA but {i} given -> Did set to 0.")
 
-        # self.pi.spi_write(self.dac, val)
+        self.pi.spi_write(self.dac, self.Ival)
 
     def setPercent(self, percent: float, channel: bool) -> None:
         """Set Output in percent on specified channel."""
