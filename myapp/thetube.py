@@ -93,28 +93,16 @@ class Tube:
         raw = (b[-2] << 8) | b[-1] # remove most significant byte
         raw = raw & ~(0xf000) # set bits 12-15 zero
         if channel == False:
-            # return [res, ((70/4095)*res)]
-            if raw <= 222:
-                res = 0
-            else:
-                # res = ((raw*60/(4095-819)))
-                res = (raw*0.018)
-            return [raw, res]
+            res = (raw*0.018)
         else:
-            if raw <= 33:
-                res = 0
-            else:
-                # res = ((raw*1000/(4095-819)))
-                res = (raw*0.302)
-            # return [res, ((870/3071)*res)]
-            return [raw, res]
+            res = (raw*0.302)
+        return [raw, res]
 
     def setHV(self, hv: float) -> None:
         """Set HV Output in kV."""
         self.hv = hv
         if 4 <= hv <= 70:
             val = abs(int(hv/0.017))
-            # print(val)
             self.HVval = self.composeBytesDac(val, 0)
             print(f"HV set to {hv}kV -> {val}. Ok.")
         elif 0 <= hv < 4:

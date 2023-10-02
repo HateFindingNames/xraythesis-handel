@@ -300,7 +300,7 @@ class XMagix:
 
         # if duration == 0:
         # console.log(f"Run started until stopped by user...")
-        self.status = self._lib.xiaStartRun(self.cdetChan, self.cclearMca)
+        self.status = self._lib.xiaStartRun(self.cdetChan, cclearMca)
         runtype = self.getAcquisitionValues("preset_type")
         runtype = [key for key, val in CONSTANTS.items() if val == runtype]
         self.CHECK_ERROR(f"Run type {runtype} started ...")
